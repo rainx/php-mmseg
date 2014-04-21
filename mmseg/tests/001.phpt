@@ -5,7 +5,14 @@ Check for mmseg presence
 --FILE--
 <?php 
 $arr = mmseg_segment("你好，世界");
-echo count($arr);
+var_dump($arr);
 ?>
 --EXPECT--
-2
+array(3) {
+  [0]=>
+  string(6) "你好"
+  [1]=>
+  string(3) "，"
+  [2]=>
+  string(6) "世界"
+}

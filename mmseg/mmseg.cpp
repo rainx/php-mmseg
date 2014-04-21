@@ -80,6 +80,7 @@ static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
     int nRet = 0;
     nRet = mgr->init(INI_STR("mmseg.dict_dir"));
     if (nRet == 0) {
+        mmseg_globals->mgr = (void*) mgr;
 	    return ;
     } else {
         if (mgr != NULL)  {
@@ -199,27 +200,26 @@ PHP_FUNCTION(mmseg_segment)
 		return;
 
     SegmenterManager* mgr =  NULL;
-    mgr = (SegmenterManager*) & MMSEG_G(mgr);
+    mgr = (SegmenterManager*) MMSEG_G(mgr);
     if (mgr == NULL) {
         RETURN_NULL();
     }
 
     Segmenter* seg = mgr->getSegmenter();
-
-    //seg->setBuffer((u1*)content, (u4)content_len);
-
+    u4 content_length = content_len;
+    seg->setBuffer((u1*)content, content_length);
     array_init(return_value);
-    //while(1)
-    //{
-    //    u2 len = 0, symlen = 0;
-    //    char* tok = (char*)seg->peekToken(len,symlen);
-    //    if(!tok || !*tok || !len){
-    //        break;
-    //    }
-    //    //append new item
-    //    add_next_index_stringl(return_value, tok, len, 1);
-    //    seg->popToken(len);
-    //}
+    while(1)
+    {
+        u2 len = 0, symlen = 0;
+        char* tok = (char*)seg->peekToken(len,symlen);
+        if(!tok || !*tok || !len){
+            break;
+        }
+        //append new item
+        add_next_index_stringl(return_value, tok, len, 1);
+        seg->popToken(len);
+    }
     return ;
 }
 /* }}} */
