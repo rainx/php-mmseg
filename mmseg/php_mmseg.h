@@ -35,18 +35,24 @@ extern "C" {
 
 using namespace css;
 
+#define PHP_MMSEG_DESCRIPTOR_RES_NAME "mmseg segmenter manager resource"
+
 PHP_MINIT_FUNCTION(mmseg);
 PHP_MSHUTDOWN_FUNCTION(mmseg);
 PHP_RINIT_FUNCTION(mmseg);
 PHP_RSHUTDOWN_FUNCTION(mmseg);
 PHP_MINFO_FUNCTION(mmseg);
 
-PHP_FUNCTION(confirm_mmseg_compiled);	/* For testing, remove later. */
+// 使用全局的mmseg数据进行分词
 PHP_FUNCTION(mmseg_segment);
 
+// 初始化mmseg配置，或者mmseg句柄
+PHP_FUNCTION(mmseg_open);
+// 关闭句柄，释放空间
+PHP_FUNCTION(mmseg_close);
+
 ZEND_BEGIN_MODULE_GLOBALS(mmseg)
-    //SegmenterManager* mgr;
-    void* mgr;
+    void* mgr; /* (SegmenterManager*) */
 ZEND_END_MODULE_GLOBALS(mmseg)
 
 /* In every utility function you add that needs to use variables 

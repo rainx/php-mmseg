@@ -22,8 +22,9 @@ static int le_mmseg;
  * Every user visible function must have an entry in mmseg_functions[].
  */
 const zend_function_entry mmseg_functions[] = {
-	PHP_FE(confirm_mmseg_compiled,	NULL)		/* For testing, remove later. */
 	PHP_FE(mmseg_segment,	NULL)
+	PHP_FE(mmseg_open,	NULL)
+	PHP_FE(mmseg_close,	NULL)
 	PHP_FE_END	/* Must be the last line in mmseg_functions[] */
 };
 /* }}} */
@@ -85,7 +86,9 @@ static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
     } else {
         if (mgr != NULL)  {
             delete mgr;
+            mgr = NULL;
         }
+        mmseg_globals->mgr = NULL;
         return ;
     }
 }
@@ -96,6 +99,20 @@ static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
     SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
     if (mgr != NULL)  {
         delete mgr;
+        mgr = NULL;
+    }
+}
+
+// mmseg segmenter manager句柄
+static int le_mmseg_descriptor;
+
+// mmseg 句柄的dtor函数
+static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+{
+    SegmenterManager *mgr = (SegmenterManager*)rsrc->ptr;
+    if (mgr != NULL) {
+        delete mgr;
+        mgr = NULL;
     }
 }
 
@@ -104,6 +121,9 @@ static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
 PHP_MINIT_FUNCTION(mmseg)
 {
 	REGISTER_INI_ENTRIES();
+
+    // 初始化mmseg资源句柄
+    le_mmseg_descriptor = zend_register_list_destructors_ex(php_mmseg_descriptor_dtor, NULL, PHP_MMSEG_DESCRIPTOR_RES_NAME,module_number);
     
     // 初始化，如果初始化失败，则返回失败信息，(XXX: 未来将改变为如果初始化失败, 可以在程序里面调用init初始化)
 #ifdef ZTS
@@ -161,27 +181,6 @@ PHP_MINFO_FUNCTION(mmseg)
 /* }}} */
 
 
-/* Remove the following function when you have succesfully modified config.m4
-   so that your module can be compiled into PHP, it exists only for testing
-   purposes. */
-
-/* Every user-visible function in PHP should document itself in the source */
-/* {{{ proto string confirm_mmseg_compiled(string arg)
-   Return a string to confirm that the module is compiled in */
-PHP_FUNCTION(confirm_mmseg_compiled)
-{
-	char *arg = NULL;
-	int arg_len, len;
-	char *strg;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
-		return;
-	}
-
-	len = spprintf(&strg, 0, "Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.", "mmseg", arg);
-	RETURN_STRINGL(strg, len, 0);
-}
-/* }}} */
 /* The previous line is meant for vim and emacs, so it can correctly fold and 
    unfold functions in source code. See the corresponding marks just before 
    function definition, where the functions purpose is also documented. Please 
@@ -195,11 +194,21 @@ PHP_FUNCTION(mmseg_segment)
 	char *content = NULL;
 	int argc = ZEND_NUM_ARGS();
 	int content_len;
-
-	if (zend_parse_parameters(argc TSRMLS_CC, "s", &content, &content_len) == FAILURE) 
-		return;
-
     SegmenterManager* mgr =  NULL;
+    zval *mmseg_resource;
+
+    // 判断传入参数的数量
+    if (argc == 1) {
+	    if (zend_parse_parameters(argc TSRMLS_CC, "s", &content, &content_len) == FAILURE) 
+		    return;
+    } else if (argc = 2){
+	    if (zend_parse_parameters(argc TSRMLS_CC, "rs", &mmseg_resource, &content, &content_len) == FAILURE) 
+            return;
+        ZEND_FETCH_RESOURCE(mgr,SegmenterManager*,&mmseg_resource,-1,PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
+    } else {
+        return;
+    }
+
     mgr = (SegmenterManager*) MMSEG_G(mgr);
     if (mgr == NULL) {
         RETURN_NULL();
@@ -223,6 +232,42 @@ PHP_FUNCTION(mmseg_segment)
     return ;
 }
 /* }}} */
+
+PHP_FUNCTION(mmseg_open)
+{
+	char *path = NULL;
+	int argc = ZEND_NUM_ARGS();
+	int path_len;
+
+	if (zend_parse_parameters(argc TSRMLS_CC, "s", &path, &path_len) == FAILURE) 
+		return;
+
+    // 生成新的对象
+    SegmenterManager* mgr = new SegmenterManager();
+    int nRet = 0;
+    nRet = mgr->init(path);
+    if (nRet == 0) {
+        // 注册这个资源
+        ZEND_REGISTER_RESOURCE(return_value,mgr,le_mmseg_descriptor);
+    } else {
+        RETURN_NULL();
+    }
+}
+
+
+PHP_FUNCTION(mmseg_close)
+{
+    zval *mmseg_resource;
+    SegmenterManager* mgr;
+	int argc = ZEND_NUM_ARGS();
+
+	if (zend_parse_parameters(argc TSRMLS_CC, "r", &mmseg_resource) == FAILURE) 
+		return;
+    ZEND_FETCH_RESOURCE(mgr,SegmenterManager*,&mmseg_resource,-1,PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
+
+    zend_hash_index_del(&EG(regular_list),Z_RESVAL_P(mmseg_resource));
+    RETURN_TRUE; 
+}
 
 
 /*
