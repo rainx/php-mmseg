@@ -45,13 +45,13 @@ sudo make install
 1. 全局字典模式
 
     该模式引入全文的字典文件，不需要每次调用分词代码之前调用字典，但是要求必须在配置文件中配置好字典的目录
-    ```
+    ```php
     $ret = mmseg_segment("你好，世界");
     var_dump($ret);
     ```
 2. 在程序中引入字典
     
-    ```
+    ```php
     $mmseg = mmseg_open("/opt/mmseg/etc");
     $ret = mmseg_segment($mmseg, "你好，世界");
     mmseg_close($mmseg);
@@ -59,7 +59,7 @@ sudo make install
     ```
 
 输出结果（使用mmseg默认的字典）
-    ```
+    ```php
     array(3) {
       [0]=>
       string(6) "你好"
