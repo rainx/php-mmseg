@@ -50,6 +50,8 @@ PHP_FUNCTION(mmseg_segment);
 PHP_FUNCTION(mmseg_open);
 // 关闭句柄，释放空间
 PHP_FUNCTION(mmseg_close);
+// 字典生成
+PHP_FUNCTION(mmseg_gendict);
 
 ZEND_BEGIN_MODULE_GLOBALS(mmseg)
     void* mgr; /* (SegmenterManager*) */

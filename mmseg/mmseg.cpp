@@ -23,8 +23,9 @@ static int le_mmseg;
  */
 const zend_function_entry mmseg_functions[] = {
 	PHP_FE(mmseg_segment,	NULL)
-	PHP_FE(mmseg_open,	NULL)
-	PHP_FE(mmseg_close,	NULL)
+	PHP_FE(mmseg_open,	    NULL)
+	PHP_FE(mmseg_close,	    NULL)
+	PHP_FE(mmseg_gendict,	NULL)
 	PHP_FE_END	/* Must be the last line in mmseg_functions[] */
 };
 /* }}} */
@@ -268,6 +269,45 @@ PHP_FUNCTION(mmseg_close)
     zend_hash_index_del(&EG(regular_list),Z_RESVAL_P(mmseg_resource));
     RETURN_TRUE; 
 }
+
+
+// 字典的生成
+PHP_FUNCTION(mmseg_gendict)
+{
+	int argc = ZEND_NUM_ARGS();
+
+	char *path = NULL;
+	int path_len;
+
+    char *target = NULL;
+    int target_len;
+
+    zend_bool b_plainText = 0;
+
+	if (zend_parse_parameters(argc TSRMLS_CC, "ss", &path, &path_len, &target, &target_len) == FAILURE) 
+		return;
+
+    UnigramCorpusReader ur;
+    ur.open(path,b_plainText?"plain":NULL);
+    UnigramDict ud;
+    int ret = ud.import(ur);
+    ud.save(target);      
+    //check
+    int i = 0;
+    for(i=0;i<ur.count();i++)
+    {
+        UnigramRecord* rec = ur.getAt(i);
+
+        if(ud.exactMatch(rec->key.c_str()) == rec->count){
+            continue;
+        }else{
+            RETURN_FALSE;
+        }
+    }//end for
+
+    RETURN_TRUE; 
+}
+
 
 
 /*
