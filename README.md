@@ -59,16 +59,16 @@ sudo make install
     ```
 
 输出结果（使用mmseg默认的字典）
-    ```php
-    array(3) {
-      [0]=>
-      string(6) "你好"
-      [1]=>
-      string(3) "，"
-      [2]=>
-      string(6) "世界"
-    }
-    ```
+```php
+array(3) {
+  [0]=>
+  string(6) "你好"
+  [1]=>
+  string(3) "，"
+  [2]=>
+  string(6) "世界"
+}
+```
 
 
 ## 更多
