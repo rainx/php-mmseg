@@ -57,7 +57,6 @@ sudo make install
     mmseg_close($mmseg);
     var_dump($ret);
     ```
-
 输出结果（使用mmseg默认的字典）
 ```php
 array(3) {
