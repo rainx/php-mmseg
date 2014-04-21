@@ -1,1 +1,0 @@
-g++ test.cpp -I/opt/mmseg/include/mmseg/ -L/opt/mmseg/lib/  -lmmseg -o test -Wno-deprecated  -lstdc++   -fPIC
