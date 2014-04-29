@@ -10,6 +10,9 @@ extern "C" {
 }
 
 #include "php_mmseg.h"
+#include <sys/stat.h>
+
+using namespace std;
 
 // SegmenterManager
 ZEND_DECLARE_MODULE_GLOBALS(mmseg)
@@ -26,6 +29,8 @@ const zend_function_entry mmseg_functions[] = {
 	PHP_FE(mmseg_open,	    NULL)
 	PHP_FE(mmseg_close,	    NULL)
 	PHP_FE(mmseg_gendict,	NULL)
+	PHP_FE(mmseg_gensynonyms,	NULL)
+	PHP_FE(mmseg_genthesaurus,	NULL)
 	PHP_FE_END	/* Must be the last line in mmseg_functions[] */
 };
 /* }}} */
@@ -61,6 +66,7 @@ END_EXTERN_C()
 PHP_INI_BEGIN()
     // setting the path of the dictionary
     PHP_INI_ENTRY("mmseg.dict_dir", "/opt/etc", PHP_INI_ALL, NULL)
+    PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, NULL)
 PHP_INI_END()
 /* }}} */
 
@@ -77,12 +83,25 @@ static void php_mmseg_init_globals(zend_mmseg_globals *mmseg_globals)
 /* Triggered at the beginning of a thread */
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
 {
+    struct stat st;
     SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
     mgr = new SegmenterManager();
     int nRet = 0;
+    mmseg_globals->dict_mtime = 0;
     nRet = mgr->init(INI_STR("mmseg.dict_dir"));
     if (nRet == 0) {
         mmseg_globals->mgr = (void*) mgr;
+        // 记录最后一次字典文件更改的数值
+        string dict_file_path;
+        dict_file_path = INI_STR("mmseg.dict_dir");
+        dict_file_path.append("/uni.lib");
+
+        if (stat(dict_file_path.c_str(), &st) == 0) {
+            mmseg_globals->dict_mtime = st.st_mtime;
+            MMSEG_LOG(ctime(&st.st_mtime));
+        }
+
+        MMSEG_LOG("minit load dictionary");
 	    return ;
     } else {
         if (mgr != NULL)  {
@@ -198,10 +217,54 @@ PHP_FUNCTION(mmseg_segment)
     SegmenterManager* mgr =  NULL;
     zval *mmseg_resource;
 
+    zend_bool autoreload = INI_BOOL("mmseg.autoreload");
+
     // 判断传入参数的数量
     if (argc == 1) {
+        struct stat st;
 	    if (zend_parse_parameters(argc TSRMLS_CC, "s", &content, &content_len) == FAILURE) 
 		    return;
+        // 如果使用全局的字典文件，在这里看一下是否需要判断文件是否有改变
+        if (1 == autoreload) {
+            // 文件名
+            string dict_file_path;
+            dict_file_path = INI_STR("mmseg.dict_dir");
+            dict_file_path.append("/uni.lib");
+
+            if (stat(dict_file_path.c_str(), &st) == 0) {
+                if (st.st_mtime != MMSEG_G(dict_mtime)) {
+                    MMSEG_G(dict_mtime) = st.st_mtime;
+                    SegmenterManager* oldMgr = (SegmenterManager*)MMSEG_G(mgr);
+                    SegmenterManager* newMgr;
+                    newMgr = new SegmenterManager();
+                    int nRet = 0;
+                    nRet = newMgr->init(INI_STR("mmseg.dict_dir"));
+                    if (nRet == 0) {
+                        if (oldMgr) {
+                            MMSEG_LOG("trying to delete old mgr");
+                            delete oldMgr;
+                            oldMgr = NULL;
+                        }
+                        
+                        MMSEG_LOG("load dictionary on change");
+                        MMSEG_G(mgr) = newMgr;
+                    } else {
+                        // no change. still use oldMgr
+                        MMSEG_LOG("no change, initialize new dict file failed");
+                        newMgr = NULL;
+                    }
+                } else {
+                    MMSEG_LOG(ctime(&st.st_mtime));
+                    MMSEG_LOG(ctime(&MMSEG_G(dict_mtime)));
+                    MMSEG_LOG("no change, dict file no change");
+                    // no change, still  use old oldMgr
+                }
+            } else {
+                MMSEG_LOG("no change, stat new dict file failed");
+            }
+        } else {
+            MMSEG_LOG("no change, autoreload not set");
+        }
     } else if (argc = 2){
 	    if (zend_parse_parameters(argc TSRMLS_CC, "rs", &mmseg_resource, &content, &content_len) == FAILURE) 
             return;
@@ -308,6 +371,53 @@ PHP_FUNCTION(mmseg_gendict)
     RETURN_TRUE; 
 }
 
+
+// 特殊短语字典的生成
+PHP_FUNCTION(mmseg_gensynonyms)
+{
+	int argc = ZEND_NUM_ARGS();
+
+	char *path = NULL;
+	int path_len;
+
+    char *target = NULL;
+    int target_len;
+
+    zend_bool b_plainText = 0;
+
+	if (zend_parse_parameters(argc TSRMLS_CC, "ss", &path, &path_len, &target, &target_len) == FAILURE) 
+        return;
+
+    SynonymsDict dict;
+    dict.import(path);
+    if(target)
+        dict.save(target);
+    else
+        dict.save("synonyms.dat");
+
+    RETURN_TRUE; 
+}
+
+// 同义词词典的生成 
+PHP_FUNCTION(mmseg_genthesaurus)
+{
+	int argc = ZEND_NUM_ARGS();
+
+	char *path = NULL;
+	int path_len;
+
+    char *target = NULL;
+    int target_len;
+
+    zend_bool b_plainText = 0;
+
+	if (zend_parse_parameters(argc TSRMLS_CC, "ss", &path, &path_len, &target, &target_len) == FAILURE) 
+        return;
+
+    ThesaurusDict tdict;
+    tdict.import(path, target);
+    RETURN_TRUE; 
+}
 
 
 /*

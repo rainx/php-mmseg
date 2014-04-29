@@ -28,6 +28,7 @@ extern "C" {
 #include <algorithm>
 #include <map>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "SegmenterManager.h"
 #include "Segmenter.h"
@@ -52,9 +53,14 @@ PHP_FUNCTION(mmseg_open);
 PHP_FUNCTION(mmseg_close);
 // 字典生成
 PHP_FUNCTION(mmseg_gendict);
+// 生成特殊短语字典
+PHP_FUNCTION(mmseg_gensynonyms);
+// 生成同义词词典
+PHP_FUNCTION(mmseg_genthesaurus);
 
 ZEND_BEGIN_MODULE_GLOBALS(mmseg)
-    void* mgr; /* (SegmenterManager*) */
+    void*       mgr; /* (SegmenterManager*) */  
+    time_t      dict_mtime;
 ZEND_END_MODULE_GLOBALS(mmseg)
 
 /* In every utility function you add that needs to use variables 
@@ -71,6 +77,12 @@ ZEND_END_MODULE_GLOBALS(mmseg)
 #define MMSEG_G(v) TSRMG(mmseg_globals_id, zend_mmseg_globals *, v)
 #else
 #define MMSEG_G(v) (mmseg_globals.v)
+#endif
+
+#ifdef MMSEG_DEBUG
+#define MMSEG_LOG(w) php_error(E_WARNING, w)
+#else
+#define MMSEG_LOG(w) ;
 #endif
 
 #endif	/* PHP_MMSEG_H */
