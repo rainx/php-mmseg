@@ -49,7 +49,7 @@ zend_module_entry mmseg_module_entry = {
 	PHP_RSHUTDOWN(mmseg),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(mmseg),
 #if ZEND_MODULE_API_NO >= 20010901
-	"0.1", /* Replace with version number for your extension */
+	"0.2", /* Replace with version number for your extension */
 #endif
 	STANDARD_MODULE_PROPERTIES
 };
