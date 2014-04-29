@@ -16,29 +16,29 @@ php-mmseg
 ## 安装
 
 1. 首先安装LibMMSeg
-```
-cd coreseek-4.1-beta/mmseg-3.2.14
-./configure --prefix=/opt/
-make 
-sudo make install
-```
+    ```
+    cd coreseek-4.1-beta/mmseg-3.2.14
+    ./configure --prefix=/opt/
+    make 
+    sudo make install
+    ```
 2. 安装php-mmseg
-```
-cd php-mmseg/mmseg
-phpize
-./configure --with-mmseg=/opt
-make
-sudo make install
-```
+    ```
+    cd php-mmseg/mmseg
+    phpize
+    ./configure --with-mmseg=/opt
+    make
+    sudo make install
+    ```
 3. 配置php-mmseg
-
     在php.ini中增加
     ```
     extension=mmseg.so
     mmseg.dict_dir=/opt/etc
-    
+    mmseg.autoreload=1
     ```
-    注意， mmseg.dict_dir 配置的是mmseg配置文件和字典所在目录的地址
+    注意， `mmseg.dict_dir` 配置的是mmseg配置文件和字典所在目录的地址, `mmseg.autoreload` 如果设置为1 则字典文件（特指uni.lib)， 在更新之后，系统会自动重新载入配置文件和字典。
+
 
 ## 使用
 
@@ -93,6 +93,16 @@ x:1
 x:1
 湖边 1
 ```
+4. 生成特殊短语，同义词词典
+```php
+// 生成特殊短语词典
+mmseg_gensynonyms(dirname(__FILE__) . "/" . "synonyms.txt", dirname(__FILE__) . "/" . "synonyms.dat" )
+// 生成同义词词典
+mmseg_genthesaurus(dirname(__FILE__) . "/" . "thesaurus.txt", dirname(__FILE__) . "/" . "thesaurus.dat" )
+
+```
+
+
 
 
 ## 更多
