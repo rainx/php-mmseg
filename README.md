@@ -19,6 +19,7 @@ php-mmseg
 
     ```
     cd coreseek-4.1-beta/mmseg-3.2.14
+    ./bootstrap
     ./configure --prefix=/opt/
     make 
     sudo make install
@@ -97,13 +98,14 @@ php-mmseg
     湖边 1
     ```
 4. 生成特殊短语，同义词词典
-```php
-// 生成特殊短语词典
-mmseg_gensynonyms(dirname(__FILE__) . "/" . "synonyms.txt", dirname(__FILE__) . "/" . "synonyms.dat" )
-// 生成同义词词典
-mmseg_genthesaurus(dirname(__FILE__) . "/" . "thesaurus.txt", dirname(__FILE__) . "/" . "thesaurus.dat" )
 
-```
+    ```php
+    // 生成特殊短语词典
+    mmseg_gensynonyms(dirname(__FILE__) . "/" . "synonyms.txt", dirname(__FILE__) . "/" . "synonyms.dat" )
+    // 生成同义词词典
+    mmseg_genthesaurus(dirname(__FILE__) . "/" . "thesaurus.txt", dirname(__FILE__) . "/" . "thesaurus.dat" )
+    
+    ```
 
 
 
