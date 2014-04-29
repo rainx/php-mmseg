@@ -16,6 +16,7 @@ php-mmseg
 ## 安装
 
 1. 首先安装LibMMSeg
+
     ```
     cd coreseek-4.1-beta/mmseg-3.2.14
     ./configure --prefix=/opt/
@@ -23,6 +24,7 @@ php-mmseg
     sudo make install
     ```
 2. 安装php-mmseg
+
     ```
     cd php-mmseg/mmseg
     phpize
@@ -31,6 +33,7 @@ php-mmseg
     sudo make install
     ```
 3. 配置php-mmseg
+
     在php.ini中增加
     ```
     extension=mmseg.so
@@ -69,30 +72,30 @@ php-mmseg
     }
     ```
 3. 生成字典文件
-
-类似命令行的如下命令，
-```
-mmseg -u unigram.txt
-```
-
-我们可以使用下面的语句生成词典文件，其中第一个参数为要输入的源文本格式的词典文件， 如unigram.txt , 第二个参数为输出的供分词使用的词典文件
-
-代码
-```php
-$isDone = mmseg_gendict(dirname(__FILE__) . "/" . "unigram.txt", dirname(__FILE__) . "/" . "unigram.txt.uni" );
-
-```
-
-原文本格式的词典文件格式如下（参考LibMMSeg文档 : http://www.coreseek.cn/opensource/mmseg/ ）
-```
-河 187
-x:187
-造假者 1
-x:1
-台北队 1
-x:1
-湖边 1
-```
+    
+    类似命令行的如下命令，
+    ```
+    mmseg -u unigram.txt
+    ```
+    
+    我们可以使用下面的语句生成词典文件，其中第一个参数为要输入的源文本格式的词典文件， 如unigram.txt , 第二个参数为输出的供分词使用的词典文件
+    
+    代码
+    ```php
+    $isDone = mmseg_gendict(dirname(__FILE__) . "/" . "unigram.txt", dirname(__FILE__) . "/" . "unigram.txt.uni" );
+    
+    ```
+    
+    原文本格式的词典文件格式如下（参考LibMMSeg文档 : http://www.coreseek.cn/opensource/mmseg/ ）
+    ```
+    河 187
+    x:187
+    造假者 1
+    x:1
+    台北队 1
+    x:1
+    湖边 1
+    ```
 4. 生成特殊短语，同义词词典
 ```php
 // 生成特殊短语词典
