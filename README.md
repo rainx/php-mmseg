@@ -15,7 +15,7 @@ php-mmseg
 
 ## 安装
 
-1. 首先安装LibMMSeg
+1. 首先安装LibMMSeg ( http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz )
 
     ```
     cd coreseek-4.1-beta/mmseg-3.2.14
