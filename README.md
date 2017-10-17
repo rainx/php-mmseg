@@ -7,7 +7,9 @@ php-mmseg
 
 ## 依赖
 
-*coreseek官网已经关闭了，所以已经无法从官方文档查询到软件包的细节*
+*coreseek官网已经关闭了，所以已经无法从官方文档查询到软件包的细节, 如果需要查询官网信息，可以参考 archive.org 上的备份*
+
+https://web.archive.org/web/20161122124307/http://www.coreseek.cn:80/products-install/faq/
 
 1. php5.4 以上版本 （其他版本目前还没有测试）
 2. LibMMSeg 3.2.14版本 <del>http://www.coreseek.cn/opensource/mmseg/</del>
