@@ -1,12 +1,12 @@
-extern "C" {
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
+extern "C" {
 #include "php.h"
+}
 #include "php_ini.h"
 #include "ext/standard/info.h"
-}
 #include "php_mmseg.h"
 #include <sys/stat.h>
 
@@ -87,7 +87,7 @@ PHP_MSHUTDOWN_FUNCTION(mmseg)
  */
 PHP_RINIT_FUNCTION(mmseg)
 {
-#if defined(COMPILE_DL_MMSEG) && defined(ZTS)
+#if defined(COMPILE_DL_MMSEG) && defined(ZTS) && defined(ZEND_TSRMLS_CACHE_UPDATE)
 	ZEND_TSRMLS_CACHE_UPDATE();
 #endif
 	return SUCCESS;
