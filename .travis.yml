@@ -1,0 +1,13 @@
+language: php 
+
+php:
+  - 7.0
+#Compile
+before_script:
+    - ./travis/build_libmmseg.sh
+    - ./travis/build_php-mmseg.sh
+    - phpenv config-add mmseg/ini/mmseg.ini
+
+# Run PHPs run-tests.php 
+script:
+    - echo "ok"
