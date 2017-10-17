@@ -2,7 +2,7 @@
 
 PWD=`pwd`
 
-cd php-mmseg/mmseg
+cd mmseg
 phpize
 ./configure --with-mmseg=/opt
 make
