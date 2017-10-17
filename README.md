@@ -18,7 +18,7 @@ php-mmseg
 ## 安装
 
 1. 首先安装LibMMSeg ( <del>http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz</del> ) 
-**我将libMMeg保存一份到dependencies谬路下，
+**我将libMMeg保存一份到我们的git仓库的dependencies 下**
 
     ```
     cd dependencies/mmseg-3.2.14
