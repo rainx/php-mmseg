@@ -4,7 +4,7 @@ Check for mmseg presence
 <?php if (!extension_loaded("mmseg")) print "skip"; ?>
 --FILE--
 <?php 
-$obj = mmseg_open("/opt/mmseg/etc");
+$obj = mmseg_open("/opt/etc");
 var_dump($obj);
 ?>
 --EXPECT--

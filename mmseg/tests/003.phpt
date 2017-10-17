@@ -4,7 +4,7 @@ Check for mmseg presence
 <?php if (!extension_loaded("mmseg")) print "skip"; ?>
 --FILE--
 <?php 
-$mmseg = mmseg_open("/opt/mmseg/etc");
+$mmseg = mmseg_open("/opt/etc");
 $arr = mmseg_segment($mmseg, "你好，世界");
 mmseg_close($mmseg);
 var_dump($arr);
