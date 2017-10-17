@@ -8,6 +8,6 @@
 // ARG_ENABLE("mmseg", "enable mmseg support", "no");
 
 if (PHP_MMSEG != "no") {
-	EXTENSION("mmseg", "mmseg.c");
+	EXTENSION("mmseg", "mmseg.c", PHP_EXTNAME_SHARED, "/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1");
 }
 

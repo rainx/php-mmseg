@@ -1,4 +1,3 @@
-
 extern "C" {
     #ifdef HAVE_CONFIG_H
     #include "config.h"
@@ -8,9 +7,18 @@ extern "C" {
     #include "php_ini.h"
     #include "ext/standard/info.h"
 }
-
 #include "php_mmseg.h"
 #include <sys/stat.h>
+
+#if PHP_MAJOR_VERSION >= 7
+    typedef zend_resource zend_rsrc_list_entry;
+#endif
+
+static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
+static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
+static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
+static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC);
+
 
 using namespace std;
 
@@ -19,6 +27,93 @@ ZEND_DECLARE_MODULE_GLOBALS(mmseg)
 
 /* True global resources - no need for thread safety here */
 static int le_mmseg;
+// mmseg segmenter manager句柄
+static int le_mmseg_descriptor;
+
+/* {{{ PHP_INI
+ */
+PHP_INI_BEGIN()
+    //STD_PHP_INI_ENTRY("mmseg.dict_dir",      "/opt/etc", PHP_INI_ALL, OnUpdateLong, global_value, zend_mmseg_globals, mmseg_globals)
+    //STD_PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, OnUpdateString, global_string, zend_mmseg_globals, mmseg_globals)
+    PHP_INI_ENTRY("mmseg.dict_dir", "/opt/etc", PHP_INI_ALL, NULL)
+    PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, NULL)
+PHP_INI_END()
+/* }}} */
+
+
+/* {{{ php_mmseg_init_globals
+ */
+/* Uncomment this function if you have INI entries
+static void php_mmseg_init_globals(zend_mmseg_globals *mmseg_globals)
+{
+	mmseg_globals->global_value = 0;
+	mmseg_globals->global_string = NULL;
+}
+*/
+/* }}} */
+
+/* {{{ PHP_MINIT_FUNCTION
+ */
+PHP_MINIT_FUNCTION(mmseg)
+{
+	REGISTER_INI_ENTRIES();
+	// 初始化mmseg资源句柄
+	le_mmseg_descriptor = zend_register_list_destructors_ex(php_mmseg_descriptor_dtor, NULL, PHP_MMSEG_DESCRIPTOR_RES_NAME,module_number);
+	// 初始化，如果初始化失败，则返回失败信息，(XXX: 未来将改变为如果初始化失败, 可以在程序里面调用init初始化)
+#ifdef ZTS
+	ts_allocate_id(&mmseg_globals_id, sizeof(zend_mmseg_globals),
+			php_mmseg_globals_ctor, php_mmseg_globals_dtor);
+#else
+	php_mmseg_globals_ctor(&mmseg_globals TSRMLS_CC);
+#endif
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MSHUTDOWN_FUNCTION
+ */
+PHP_MSHUTDOWN_FUNCTION(mmseg)
+{
+	UNREGISTER_INI_ENTRIES();
+#ifndef ZTS
+	php_mmseg_globals_dtor(&mmseg_globals TSRMLS_CC);
+#endif
+	return SUCCESS;
+}
+/* }}} */
+
+/* Remove if there's nothing to do at request start */
+/* {{{ PHP_RINIT_FUNCTION
+ */
+PHP_RINIT_FUNCTION(mmseg)
+{
+#if defined(COMPILE_DL_MMSEG) && defined(ZTS)
+	ZEND_TSRMLS_CACHE_UPDATE();
+#endif
+	return SUCCESS;
+}
+/* }}} */
+
+/* Remove if there's nothing to do at request end */
+/* {{{ PHP_RSHUTDOWN_FUNCTION
+ */
+PHP_RSHUTDOWN_FUNCTION(mmseg)
+{
+	return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_MINFO_FUNCTION
+ */
+PHP_MINFO_FUNCTION(mmseg)
+{
+	php_info_print_table_start();
+	php_info_print_table_header(2, "mmseg support", "enabled");
+	php_info_print_table_end();
+
+	DISPLAY_INI_ENTRIES();
+}
+/* }}} */
 
 /* {{{ mmseg_functions[]
  *
@@ -38,9 +133,7 @@ const zend_function_entry mmseg_functions[] = {
 /* {{{ mmseg_module_entry
  */
 zend_module_entry mmseg_module_entry = {
-#if ZEND_MODULE_API_NO >= 20010901
 	STANDARD_MODULE_HEADER,
-#endif
 	"mmseg",
 	mmseg_functions,
 	PHP_MINIT(mmseg),
@@ -48,37 +141,20 @@ zend_module_entry mmseg_module_entry = {
 	PHP_RINIT(mmseg),		/* Replace with NULL if there's nothing to do at request start */
 	PHP_RSHUTDOWN(mmseg),	/* Replace with NULL if there's nothing to do at request end */
 	PHP_MINFO(mmseg),
-#if ZEND_MODULE_API_NO >= 20010901
-	"0.2", /* Replace with version number for your extension */
-#endif
+	PHP_MMSEG_VERSION,
 	STANDARD_MODULE_PROPERTIES
 };
 /* }}} */
 
 #ifdef COMPILE_DL_MMSEG
+#ifdef ZTS
+ZEND_TSRMLS_CACHE_DEFINE()
+#endif
 BEGIN_EXTERN_C()
 ZEND_GET_MODULE(mmseg)
 END_EXTERN_C()
 #endif
 
-/* {{{ PHP_INI
- */
-PHP_INI_BEGIN()
-    // setting the path of the dictionary
-    PHP_INI_ENTRY("mmseg.dict_dir", "/opt/etc", PHP_INI_ALL, NULL)
-    PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, NULL)
-PHP_INI_END()
-/* }}} */
-
-/* {{{ php_mmseg_init_globals
- */
-/*
-static void php_mmseg_init_globals(zend_mmseg_globals *mmseg_globals)
-{
-	mmseg_globals->dict_dir = NULL;
-}
-*/
-/* }}} */
 
 /* Triggered at the beginning of a thread */
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
@@ -113,6 +189,7 @@ static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
     }
 }
 
+
 /* Triggered at the end of a thread */
 static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
 {
@@ -123,8 +200,6 @@ static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
     }
 }
 
-// mmseg segmenter manager句柄
-static int le_mmseg_descriptor;
 
 // mmseg 句柄的dtor函数
 static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
@@ -135,71 +210,6 @@ static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
         mgr = NULL;
     }
 }
-
-/* {{{ PHP_MINIT_FUNCTION
- */
-PHP_MINIT_FUNCTION(mmseg)
-{
-	REGISTER_INI_ENTRIES();
-
-    // 初始化mmseg资源句柄
-    le_mmseg_descriptor = zend_register_list_destructors_ex(php_mmseg_descriptor_dtor, NULL, PHP_MMSEG_DESCRIPTOR_RES_NAME,module_number);
-    
-    // 初始化，如果初始化失败，则返回失败信息，(XXX: 未来将改变为如果初始化失败, 可以在程序里面调用init初始化)
-#ifdef ZTS
-    ts_allocate_id(&mmseg_globals_id, sizeof(zend_mmseg_globals),
-                   php_mmseg_globals_ctor, php_mmseg_globals_dtor);
-#else
-    php_mmseg_globals_ctor(&mmseg_globals TSRMLS_CC);
-#endif
-
-    return SUCCESS;
-}
-
-/* }}} */
-
-/* {{{ PHP_MSHUTDOWN_FUNCTION
- */
-PHP_MSHUTDOWN_FUNCTION(mmseg)
-{
-	UNREGISTER_INI_ENTRIES();
-#ifndef ZTS
-    php_mmseg_globals_dtor(&mmseg_globals TSRMLS_CC);
-#endif
-	return SUCCESS;
-}
-/* }}} */
-
-/* Remove if there's nothing to do at request start */
-/* {{{ PHP_RINIT_FUNCTION
- */
-PHP_RINIT_FUNCTION(mmseg)
-{
-	return SUCCESS;
-}
-/* }}} */
-
-/* Remove if there's nothing to do at request end */
-/* {{{ PHP_RSHUTDOWN_FUNCTION
- */
-PHP_RSHUTDOWN_FUNCTION(mmseg)
-{
-	return SUCCESS;
-}
-/* }}} */
-
-/* {{{ PHP_MINFO_FUNCTION
- */
-PHP_MINFO_FUNCTION(mmseg)
-{
-	php_info_print_table_start();
-	php_info_print_table_header(2, "mmseg support", "enabled");
-	php_info_print_table_end();
-
-	DISPLAY_INI_ENTRIES();
-}
-/* }}} */
-
 
 /* The previous line is meant for vim and emacs, so it can correctly fold and 
    unfold functions in source code. See the corresponding marks just before 
@@ -265,10 +275,15 @@ PHP_FUNCTION(mmseg_segment)
         } else {
             MMSEG_LOG("no change, autoreload not set");
         }
-    } else if (argc = 2){
+    } else if (argc == 2){
 	    if (zend_parse_parameters(argc TSRMLS_CC, "rs", &mmseg_resource, &content, &content_len) == FAILURE) 
             return;
+#if PHP_MAJOR_VERSION < 7
         ZEND_FETCH_RESOURCE(mgr,SegmenterManager*,&mmseg_resource,-1,PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
+#else
+        mgr = (SegmenterManager*) zend_fetch_resource(Z_RES_P(mmseg_resource), PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
+#endif
+
     } else {
         return;
     }
@@ -290,7 +305,11 @@ PHP_FUNCTION(mmseg_segment)
             break;
         }
         //append new item
+#if PHP_MAJOR_VERSION < 7
         add_next_index_stringl(return_value, tok, len, 1);
+#else
+        add_next_index_stringl(return_value, tok, len);
+#endif
         seg->popToken(len);
     }
     return ;
@@ -312,7 +331,11 @@ PHP_FUNCTION(mmseg_open)
     nRet = mgr->init(path);
     if (nRet == 0) {
         // 注册这个资源
+#if PHP_MAJOR_VERSION < 7
         ZEND_REGISTER_RESOURCE(return_value,mgr,le_mmseg_descriptor);
+#else
+        RETURN_RES(zend_register_resource(mgr, le_mmseg_descriptor));
+#endif
     } else {
         RETURN_NULL();
     }
@@ -327,9 +350,14 @@ PHP_FUNCTION(mmseg_close)
 
 	if (zend_parse_parameters(argc TSRMLS_CC, "r", &mmseg_resource) == FAILURE) 
 		return;
+#if PHP_MAJOR_VERSION < 7
     ZEND_FETCH_RESOURCE(mgr,SegmenterManager*,&mmseg_resource,-1,PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
-
     zend_hash_index_del(&EG(regular_list),Z_RESVAL_P(mmseg_resource));
+#else
+    mgr = (SegmenterManager*) zend_fetch_resource(Z_RES_P(mmseg_resource), PHP_MMSEG_DESCRIPTOR_RES_NAME,le_mmseg_descriptor);
+    zend_hash_index_del(&EG(regular_list),Z_RES_P(mmseg_resource)->handle);
+#endif
+
     RETURN_TRUE; 
 }
 
@@ -418,7 +446,6 @@ PHP_FUNCTION(mmseg_genthesaurus)
     tdict.import(path, target);
     RETURN_TRUE; 
 }
-
 
 /*
  * Local variables:

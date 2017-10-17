@@ -5,6 +5,8 @@
 extern zend_module_entry mmseg_module_entry;
 #define phpext_mmseg_ptr &mmseg_module_entry
 
+#define PHP_MMSEG_VERSION "0.3" /* Replace with version number for your extension */
+
 #ifdef PHP_WIN32
 #	define PHP_MMSEG_API __declspec(dllexport)
 #elif defined(__GNUC__) && __GNUC__ >= 4
@@ -12,8 +14,6 @@ extern zend_module_entry mmseg_module_entry;
 #else
 #	define PHP_MMSEG_API
 #endif
-
-
 
 extern "C" {
     #ifdef ZTS
@@ -63,15 +63,15 @@ ZEND_BEGIN_MODULE_GLOBALS(mmseg)
     time_t      dict_mtime;
 ZEND_END_MODULE_GLOBALS(mmseg)
 
-/* In every utility function you add that needs to use variables 
-   in php_mmseg_globals, call TSRMLS_FETCH(); after declaring other 
-   variables used by that function, or better yet, pass in TSRMLS_CC
-   after the last function argument and declare your utility function
-   with TSRMLS_DC after the last declared argument.  Always refer to
-   the globals in your function as MMSEG_G(variable).  You are 
-   encouraged to rename these macros something shorter, see
+/* Always refer to the globals in your function as MMSEG_G(variable).
+   You are encouraged to rename these macros something shorter, see
    examples in any other php module directory.
 */
+#define MMSEG_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(mmseg, v)
+
+#if defined(ZTS) && defined(COMPILE_DL_MMSEG)
+ZEND_TSRMLS_CACHE_EXTERN()
+#endif
 
 #ifdef ZTS
 #define MMSEG_G(v) TSRMG(mmseg_globals_id, zend_mmseg_globals *, v)
@@ -85,5 +85,5 @@ ZEND_END_MODULE_GLOBALS(mmseg)
 #define MMSEG_LOG(w) ;
 #endif
 
-#endif	/* PHP_MMSEG_H */
 
+#endif	/* PHP_MMSEG_H */
