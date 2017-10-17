@@ -7,18 +7,21 @@ php-mmseg
 
 ## 依赖
 
+*coreseek官网已经关闭了，所以已经无法从官方文档查询到软件包的细节*
+
 1. php5.4 以上版本 （其他版本目前还没有测试）
-2. LibMMSeg 3.2.14版本 http://www.coreseek.cn/opensource/mmseg/
+2. LibMMSeg 3.2.14版本 <del>http://www.coreseek.cn/opensource/mmseg/</del>
 ```
-    关于mmseg的安装，参考 http://www.coreseek.cn/products/products-install/
+    关于mmseg的安装，参考 <del>http://www.coreseek.cn/products/products-install/</del>
 ```
 
 ## 安装
 
-1. 首先安装LibMMSeg ( http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz ) : 可以从这个备用链接下载 https://dl.dropboxusercontent.com/u/477485/coreseek/coreseek-3.2.14.tar.gz （需要翻墙）
+1. 首先安装LibMMSeg ( <del>http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz</del> ) 
+**我将libMMeg保存一份到dependencies谬路下，
 
     ```
-    cd coreseek-4.1-beta/mmseg-3.2.14
+    cd dependencies/mmseg-3.2.14
     ./bootstrap
     ./configure --prefix=/opt/
     make 
