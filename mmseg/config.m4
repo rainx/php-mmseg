@@ -52,5 +52,5 @@ if test "$PHP_MMSEG" != "no"; then
   PHP_SUBST(MMSEG_SHARED_LIBADD)
   PHP_REQUIRE_CXX() 
   PHP_ADD_LIBRARY(stdc++, 1, EXTRA_LDFLAGS)  
-  PHP_NEW_EXTENSION(mmseg, mmseg.cpp, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  PHP_NEW_EXTENSION(mmseg, mmseg.cpp, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1 -fpermissive )
 fi
