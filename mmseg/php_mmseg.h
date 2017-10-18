@@ -67,16 +67,20 @@ ZEND_END_MODULE_GLOBALS(mmseg)
    You are encouraged to rename these macros something shorter, see
    examples in any other php module directory.
 */
-#define MMSEG_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(mmseg, v)
-
-#if defined(ZTS) && defined(COMPILE_DL_MMSEG)
-ZEND_TSRMLS_CACHE_EXTERN()
-#endif
+#if PHP_MAJOR_VERSION < 7
 
 #ifdef ZTS
 #define MMSEG_G(v) TSRMG(mmseg_globals_id, zend_mmseg_globals *, v)
 #else
 #define MMSEG_G(v) (mmseg_globals.v)
+#endif
+
+#else
+#define MMSEG_G(v) ZEND_MODULE_GLOBALS_ACCESSOR(mmseg, v)
+#endif
+
+#if defined(ZTS) && defined(COMPILE_DL_MMSEG)
+ZEND_TSRMLS_CACHE_EXTERN()
 #endif
 
 #ifdef MMSEG_DEBUG
@@ -85,5 +89,7 @@ ZEND_TSRMLS_CACHE_EXTERN()
 #define MMSEG_LOG(w) ;
 #endif
 
-
+#if PHP_MAJOR_VERSION >= 7
+#define zend_rsrc_list_entry zend_resource
+#endif
 #endif	/* PHP_MMSEG_H */
