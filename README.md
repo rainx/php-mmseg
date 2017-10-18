@@ -19,6 +19,8 @@ https://web.archive.org/web/20161122124307/http://www.coreseek.cn:80/products-in
 
 ## 安装
 
+> 目前在Linux和Mac下测试通过,Windows下还未编译过
+
 1. 首先安装LibMMSeg ( <del>http://www.coreseek.cn/uploads/csft/3.2/mmseg-3.2.14.tar.gz</del> ) 
 **我将libMMeg保存一份到我们的git仓库的dependencies 下**
 
@@ -111,10 +113,4 @@ https://web.archive.org/web/20161122124307/http://www.coreseek.cn:80/products-in
     mmseg_genthesaurus(dirname(__FILE__) . "/" . "thesaurus.txt", dirname(__FILE__) . "/" . "thesaurus.dat" )
     
     ```
-
-
-
-
-## 更多
-本扩展由小声团队开发 http://xiaosheng.fm
 
