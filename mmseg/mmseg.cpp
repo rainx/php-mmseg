@@ -28,17 +28,61 @@ PHP_INI_BEGIN()
 PHP_INI_END()
 	/* }}} */
 
+	/* Triggered at the beginning of a thread */
+static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
+{
+	struct stat st;
+	SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
+	mgr = new SegmenterManager();
+	int nRet = 0;
+	mmseg_globals->dict_mtime = 0;
+	nRet = mgr->init(INI_STR("mmseg.dict_dir"));
+	if (nRet == 0) {
+		mmseg_globals->mgr = (void*) mgr;
+		// 记录最后一次字典文件更改的数值
+		string dict_file_path;
+		dict_file_path = INI_STR("mmseg.dict_dir");
+		dict_file_path.append("/uni.lib");
 
-	/* {{{ php_mmseg_init_globals
-	 */
-	/* Uncomment this function if you have INI entries
-	   static void php_mmseg_init_globals(zend_mmseg_globals *mmseg_globals)
-	   {
-	   mmseg_globals->global_value = 0;
-	   mmseg_globals->global_string = NULL;
-	   }
-	 */
-	/* }}} */
+		if (stat(dict_file_path.c_str(), &st) == 0) {
+			mmseg_globals->dict_mtime = st.st_mtime;
+			MMSEG_LOG(ctime(&st.st_mtime));
+		}
+
+		MMSEG_LOG("minit load dictionary");
+		return ;
+	} else {
+		if (mgr != NULL)  {
+			delete mgr;
+			mgr = NULL;
+		}
+		mmseg_globals->mgr = NULL;
+		return ;
+	}
+}
+
+
+/* Triggered at the end of a thread */
+static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
+{
+	SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
+	if (mgr != NULL)  {
+		delete mgr;
+		mgr = NULL;
+	}
+}
+
+
+// mmseg 句柄的dtor函数
+static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
+{
+	SegmenterManager *mgr = (SegmenterManager*)rsrc->ptr;
+	if (mgr != NULL) {
+		delete mgr;
+		mgr = NULL;
+	}
+}
+
 
 	/* {{{ PHP_MINIT_FUNCTION
 	 */
@@ -143,61 +187,6 @@ ZEND_TSRMLS_CACHE_DEFINE()
 END_EXTERN_C()
 #endif
 
-
-	/* Triggered at the beginning of a thread */
-static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
-{
-	struct stat st;
-	SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
-	mgr = new SegmenterManager();
-	int nRet = 0;
-	mmseg_globals->dict_mtime = 0;
-	nRet = mgr->init(INI_STR("mmseg.dict_dir"));
-	if (nRet == 0) {
-		mmseg_globals->mgr = (void*) mgr;
-		// 记录最后一次字典文件更改的数值
-		string dict_file_path;
-		dict_file_path = INI_STR("mmseg.dict_dir");
-		dict_file_path.append("/uni.lib");
-
-		if (stat(dict_file_path.c_str(), &st) == 0) {
-			mmseg_globals->dict_mtime = st.st_mtime;
-			MMSEG_LOG(ctime(&st.st_mtime));
-		}
-
-		MMSEG_LOG("minit load dictionary");
-		return ;
-	} else {
-		if (mgr != NULL)  {
-			delete mgr;
-			mgr = NULL;
-		}
-		mmseg_globals->mgr = NULL;
-		return ;
-	}
-}
-
-
-/* Triggered at the end of a thread */
-static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC)
-{
-	SegmenterManager* mgr = (SegmenterManager*) mmseg_globals->mgr;
-	if (mgr != NULL)  {
-		delete mgr;
-		mgr = NULL;
-	}
-}
-
-
-// mmseg 句柄的dtor函数
-static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC)
-{
-	SegmenterManager *mgr = (SegmenterManager*)rsrc->ptr;
-	if (mgr != NULL) {
-		delete mgr;
-		mgr = NULL;
-	}
-}
 
 /* The previous line is meant for vim and emacs, so it can correctly fold and 
    unfold functions in source code. See the corresponding marks just before 
