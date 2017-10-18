@@ -10,11 +10,6 @@ extern "C" {
 #include "php_mmseg.h"
 #include <sys/stat.h>
 
-static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
-static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
-static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
-static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC);
-
 using namespace std;
 
 // SegmenterManager
