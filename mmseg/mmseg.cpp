@@ -10,9 +10,6 @@ extern "C" {
 #include "php_mmseg.h"
 #include <sys/stat.h>
 
-#if PHP_MAJOR_VERSION >= 7
-typedef zend_resource zend_rsrc_list_entry;
-#endif
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
 static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
