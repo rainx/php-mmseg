@@ -9,6 +9,7 @@ extern "C" {
 #include "ext/standard/info.h"
 #include "php_mmseg.h"
 #include <sys/stat.h>
+#include <string>
 
 using namespace std;
 
@@ -182,7 +183,7 @@ zend_module_entry mmseg_module_entry = {
 #ifdef ZTS
 ZEND_TSRMLS_CACHE_DEFINE()
 #endif
-	BEGIN_EXTERN_C()
+BEGIN_EXTERN_C()
 	ZEND_GET_MODULE(mmseg)
 END_EXTERN_C()
 #endif
