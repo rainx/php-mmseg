@@ -13,12 +13,10 @@ extern "C" {
 #if PHP_MAJOR_VERSION >= 7
 typedef zend_resource zend_rsrc_list_entry;
 #endif
-
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
 static void php_mmseg_globals_dtor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
 static void php_mmseg_globals_ctor(zend_mmseg_globals *mmseg_globals TSRMLS_DC);
 static void php_mmseg_descriptor_dtor(zend_rsrc_list_entry *rsrc TSRMLS_DC);
-
 
 using namespace std;
 
@@ -33,8 +31,6 @@ ZEND_DECLARE_MODULE_GLOBALS(mmseg)
 	/* {{{ PHP_INI
 	 */
 PHP_INI_BEGIN()
-	//STD_PHP_INI_ENTRY("mmseg.dict_dir",      "/opt/etc", PHP_INI_ALL, OnUpdateLong, global_value, zend_mmseg_globals, mmseg_globals)
-	//STD_PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, OnUpdateString, global_string, zend_mmseg_globals, mmseg_globals)
 	PHP_INI_ENTRY("mmseg.dict_dir", "/opt/etc", PHP_INI_ALL, NULL)
 	PHP_INI_ENTRY("mmseg.autoreload", "1", PHP_INI_ALL, NULL)
 PHP_INI_END()
