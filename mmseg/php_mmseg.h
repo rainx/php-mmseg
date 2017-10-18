@@ -92,4 +92,5 @@ ZEND_TSRMLS_CACHE_EXTERN()
 #if PHP_MAJOR_VERSION >= 7
 #define zend_rsrc_list_entry zend_resource
 #endif
+
 #endif	/* PHP_MMSEG_H */
